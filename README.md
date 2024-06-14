@@ -1,38 +1,74 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
 ## Description
+A Food Truck service serving San Francisco food truck data. 
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Design
 
-## Installation
+My design philosophy for this RESTful API service was to use an Inversion of Control (IoC) framework to manage code dependencies, generate boilerplate, and scaffold out the project quickly. I'm most familiar with TypeScript/Node on the backend, so I chose a TypeScript framework that would meet that criteria: NestJS. It has a handy interactive CLI to setup a TypeScript project from scratch, add models, new REST routes, generate documentation, and more.
 
-```bash
-$ yarn install
+This allowed me to focus on manipulating the food truck data to use TypeScript-compliant naming conventions (camelCase) and fleshing out the Foodtruck model.
+
+With the time I alotted myself, I knew I wouldn't be able to implement a real db connection, load the data, and wire everything together. Instead, I opted to design an adapter interface to sit between the Food Truck service and the data backend. That way, I could map the input data back to a JSON file and use that as a mock data backend. Using this pattern with NestJS's dependency injection framework makes it easy to swap a real database provider in at a later time without needing to change the interface between the food truck service and data backend. The JSON file is stored in `src` and does _not_ persist changes across instances at this time. It looks something like this:
+```typescript
+// service uses a defined interface layer, `DataProviderAdapter`, to encapsulate backend-specific logic
+// and expose it as a private property `this.db`
+export class FoodtrucksService<T extends DataProviderAdapter> {
+  constructor(private readonly db: T) {}
+}
+
+// NestJs provides @ annotations utils to loosely couple modules within a service
+// here we can inject the `JsonDataProviderAdapter` class that concretely implements the class to
+// interact with the food truck JSON file.
+// Changing data backends is as easy as creating a new class that extends `DataProviderAdapter`
+// and list it in Module.providers instead of `JsonDataProviderAdapter`
+@Module({
+  controllers: [FoodtrucksController],
+  providers: [FoodtrucksService, JsonDataProviderAdapter, /* SomeRealDataProviderAdapter */],
+})
+export class FoodtrucksModule {}
+
+// Concrete class implementing data interface 
+export class JsonDataProviderAdapter implements DataProviderAdapter {
+  // getAll(): Promise<any[]>;
+  // getById(id: string): Promise<any>;
+  // create(data: any): Promise<any>;
+  // update(id: string, data: any): Promise<any>;
+  // delete(id: string): Promise<void>;
+}
 ```
 
-## Running the app
+## Challenges, considerations, and further development
+
+I time boxed this project for a few hours as best as I could, so one of main challenges was narrowing the scope to something that could reasonably built within a few hours.
+
+This project is missing the following and further development should be focused on the following:
+- Add some kind of OAuth authentication middleware for route protection. Even just a GitHub integration would suffice.
+- A real data backend with easily-swapped-in data provider adapter code that allows for data persistence.
+- Automated unit tests to maintain quality and reliability.
+
+If I had more time, I'd like to dive deeper into NestJS's utilities for parsing input objects on POST/PUT requests, error management, and authentication.
+
+### Tech stack:
+- [Node](https://nodejs.org/en) - run JS programs outside of a browser
+- [TypeScript](https://www.typescriptlang.org/) - typed JavaScript to shift run-time errors to transpile time
+- [Nest](https://github.com/nestjs/nest) - IoC server framework for Node
+- [Jest](https://jestjs.io/) - automated testing
+- [Swagger/OpenAPI](https://swagger.io/) - powers the plugin that auto-generates API documentation for REST routes
+
+## Quick start
+
+1) Clone this repo to your local environment.
+2) Install dependencies
+```bash
+yarn install
+```
+3) Run the app
+```bash
+yarn start 
+```
+4) Navigate to `localhost:3000/api` and confirm you can view the API documentation
+5) Request food truck data: `GET localhost:3000/foodtrucks`
+
+## Development
 
 ```bash
 # development
@@ -57,17 +93,3 @@ $ yarn run test:e2e
 # test coverage
 $ yarn run test:cov
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).

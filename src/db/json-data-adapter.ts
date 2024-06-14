@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DataProviderAdapter, keyMapping } from './data-provider-adapter';
+import { DataProviderAdapter } from './data-provider-adapter';
 import { Injectable } from '@nestjs/common';
 import { Foodtruck } from 'src/foodtrucks/entities/foodtruck.entity';
 import { UpdateFoodtruckDto } from 'src/foodtrucks/dto/update-foodtruck.dto';

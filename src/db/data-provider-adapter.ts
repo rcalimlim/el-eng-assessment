@@ -1,5 +1,3 @@
-import { Foodtruck } from 'src/foodtrucks/entities/foodtruck.entity';
-
 export interface DataProviderAdapter {
   getAll(): Promise<any[]>;
   getById(id: string): Promise<any>;
