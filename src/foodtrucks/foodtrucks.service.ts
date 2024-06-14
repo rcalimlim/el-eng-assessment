@@ -16,7 +16,7 @@ export class FoodtrucksService {
   }
 
   public async findAll(): Promise<Foodtruck[]> {
-    return this.db.getAll();
+    return this.db.getAll() as unknown as Foodtruck[];
   }
 
   public async findOne(id: string): Promise<Foodtruck> {

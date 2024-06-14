@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
-import { DataProviderAdapter } from './data-provider-adapter';
+import { DataProviderAdapter, keyMapping } from './data-provider-adapter';
 import { Injectable } from '@nestjs/common';
 import { Foodtruck } from 'src/foodtrucks/entities/foodtruck.entity';
 import { UpdateFoodtruckDto } from 'src/foodtrucks/dto/update-foodtruck.dto';
@@ -26,20 +26,36 @@ export class JsonDataProviderAdapter implements DataProviderAdapter {
   }
 
   public async getAll() {
-    return this.read();
+    const trucks = this.read();
+    function transformKeys(obj: { [key: string]: any }): {
+      [key: string]: any;
+    } {
+      const result: { [key: string]: any } = {};
+
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const newKey = keyMapping[key] || key;
+          result[newKey] = obj[key];
+        }
+      }
+
+      return result;
+    }
+    const mapped = trucks.map(transformKeys);
+    return mapped;
   }
 
   public async getById(id: string) {
     return this.read().find((item) => item.id === id);
   }
 
-  public async create(data: CreateFoodtruckDto) {
+  public async create(data: CreateFoodtruckDto): Promise<Foodtruck> {
     const currentData = this.read();
-    const newData = data as Foodtruck;
     const id = uuidv4();
-    currentData.push({ id, ...newData });
+    const newRecord = { id, ...data };
+    currentData.push(newRecord);
     this.write(currentData);
-    return newData;
+    return newRecord;
   }
 
   public async update(id: string, data: UpdateFoodtruckDto) {
