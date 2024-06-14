@@ -1,13 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
+import * as path from 'path';
 import { DataProviderAdapter } from './data-provider-adapter';
-import { CreateFoodtruckDto } from 'src/foodtrucks/dto/create-foodtruck.dto';
+import { Injectable } from '@nestjs/common';
+import { Foodtruck } from 'src/foodtrucks/entities/foodtruck.entity';
 import { UpdateFoodtruckDto } from 'src/foodtrucks/dto/update-foodtruck.dto';
+import { CreateFoodtruckDto } from 'src/foodtrucks/dto/create-foodtruck.dto';
 
-const JSON_FILE_PATH = './fixtures.json';
+const JSON_FILE_PATH = path.join(__dirname, 'fixtures.json');
 
-export class JsonAdapter implements DataProviderAdapter {
-  private read() {
+@Injectable()
+export class JsonDataProviderAdapter implements DataProviderAdapter {
+  private read(): Foodtruck[] {
     try {
       const data = fs.readFileSync(JSON_FILE_PATH, 'utf8');
       return JSON.parse(data);
@@ -17,37 +21,43 @@ export class JsonAdapter implements DataProviderAdapter {
     }
   }
 
-  private write(data: any) {
+  private write(data: Foodtruck[]) {
     fs.writeFileSync(JSON_FILE_PATH, JSON.stringify(data, null, 2));
   }
 
   public async getAll() {
-    return this.read();
+    const trucks = this.read();
+    const withIds = trucks.map((truck) => {
+      truck.id = uuidv4();
+      return truck;
+    });
+    this.write(withIds);
+    return trucks;
   }
 
-  public async getById(id: number) {
+  public async getById(id: string) {
     const data = this.read();
-    return data.find((item: any) => item.id === id);
+    return data.find((item) => item.id === id);
   }
 
   public async create(data: CreateFoodtruckDto) {
     const currentData = this.read();
-    const newData = { id: uuidv4(), ...data };
+    const newData = data as Foodtruck;
     currentData.push(newData);
     this.write(currentData);
     return newData;
   }
 
-  public async update(id: number, data: UpdateFoodtruckDto) {
+  public async update(id: string, data: UpdateFoodtruckDto) {
     const currentData = this.read();
     const index = currentData.findIndex((item: any) => item.id === id);
     if (index === -1) throw new Error('Item not found');
-    currentData[index] = { id, ...data };
+    currentData[index] = { id, ...data } as Foodtruck;
     this.write(currentData);
     return currentData[index];
   }
 
-  public async delete(id: number) {
+  public async delete(id: string) {
     const currentData = this.read();
     const newData = currentData.filter((item: any) => item.id !== id);
     this.write(newData);

@@ -27,7 +27,7 @@ export class FoodtrucksController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.foodtrucksService.findOne(+id);
+    return this.foodtrucksService.findOne(id);
   }
 
   @Patch(':id')
@@ -35,11 +35,11 @@ export class FoodtrucksController {
     @Param('id') id: string,
     @Body() updateFoodtruckDto: UpdateFoodtruckDto,
   ) {
-    return this.foodtrucksService.update(+id, updateFoodtruckDto);
+    return this.foodtrucksService.update(id, updateFoodtruckDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.foodtrucksService.remove(+id);
+    return this.foodtrucksService.remove(id);
   }
 }

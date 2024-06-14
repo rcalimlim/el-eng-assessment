@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { CreateFoodtruckDto } from './dto/create-foodtruck.dto';
 import { UpdateFoodtruckDto } from './dto/update-foodtruck.dto';
+import { Foodtruck } from './entities/foodtruck.entity';
+import { JsonDataProviderAdapter } from 'src/db/json-data-adapter';
 
 @Injectable()
 export class FoodtrucksService {
-  create(createFoodtruckDto: CreateFoodtruckDto) {
-    return 'This action adds a new foodtruck';
+  // because this is injectable and extends a common CRUD interface,
+  // this can be swapped out for a real db connection by changing the
+  // type listed here for `db`
+  constructor(private readonly db: JsonDataProviderAdapter) {}
+
+  public async create(createFoodtruckDto: CreateFoodtruckDto): Promise<void> {
+    await this.db.create(createFoodtruckDto);
   }
 
-  findAll() {
-    return `This action returns all foodtrucks`;
+  public async findAll(): Promise<Foodtruck[]> {
+    return this.db.getAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} foodtruck`;
+  public async findOne(id: string): Promise<Foodtruck> {
+    return this.db.getById(id);
   }
 
-  update(id: number, updateFoodtruckDto: UpdateFoodtruckDto) {
-    return `This action updates a #${id} foodtruck`;
+  public async update(
+    id: string,
+    updateFoodtruckDto: UpdateFoodtruckDto,
+  ): Promise<Foodtruck> {
+    return this.db.update(id, updateFoodtruckDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} foodtruck`;
+  public async remove(id: string) {
+    await this.db.delete(id);
   }
 }
