@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { CreateFoodtruckDto } from './dto/create-foodtruck.dto';
 import { UpdateFoodtruckDto } from './dto/update-foodtruck.dto';
 import { Foodtruck } from './entities/foodtruck.entity';
-import { DataProviderAdapter } from 'src/db/data-provider-adapter';
+import { JsonDataProviderAdapter } from 'src/db/json-data-adapter';
 
 @Injectable()
 export class FoodtrucksService {
-  constructor(private readonly db: DataProviderAdapter) {}
+  constructor(private readonly db: JsonDataProviderAdapter) {}
 
   public async create(createFoodtruckDto: CreateFoodtruckDto): Promise<void> {
     await this.db.create(createFoodtruckDto);

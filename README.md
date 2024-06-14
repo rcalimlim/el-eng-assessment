@@ -9,10 +9,10 @@ This allowed me to focus on manipulating the food truck data to use TypeScript-c
 
 With the time I alotted myself, I knew I wouldn't be able to implement a real db connection, load the data, and wire everything together. Instead, I opted to design an adapter interface to sit between the Food Truck service and the data backend. That way, I could map the input data back to a JSON file and use that as a mock data backend. Using this pattern with NestJS's dependency injection framework makes it easy to swap a real database provider in at a later time without needing to change the interface between the food truck service and data backend. The JSON file is stored in `src` and does _not_ persist changes across instances at this time. Here are some code highlights to illustrate this:
 ```typescript
-// service uses a defined interface layer, `DataProviderAdapter`, to encapsulate backend-specific logic
-// and expose it as a private property `this.db`
-export class FoodtrucksService<T extends DataProviderAdapter> {
-  constructor(private readonly db: T) {}
+// `JsonDataProviderAdapter` extends an interface `DataProviderAdapter` to encapsulate backend-specific logic
+// and expose it as a private property `this.db` to the food truck service
+export class FoodtrucksService {
+  constructor(private readonly db: JsonDataProviderAdapter) {}
 }
 
 // NestJs provides @ annotations utils to loosely couple modules within a service
