@@ -26,18 +26,11 @@ export class JsonDataProviderAdapter implements DataProviderAdapter {
   }
 
   public async getAll() {
-    const trucks = this.read();
-    const withIds = trucks.map((truck) => {
-      truck.id = uuidv4();
-      return truck;
-    });
-    this.write(withIds);
-    return trucks;
+    return this.read();
   }
 
   public async getById(id: string) {
-    const data = this.read();
-    return data.find((item) => item.id === id);
+    return this.read().find((item) => item.id === id);
   }
 
   public async create(data: CreateFoodtruckDto) {
@@ -58,8 +51,7 @@ export class JsonDataProviderAdapter implements DataProviderAdapter {
   }
 
   public async delete(id: string) {
-    const currentData = this.read();
-    const newData = currentData.filter((item: any) => item.id !== id);
+    const newData = this.read().filter((item: any) => item.id !== id);
     this.write(newData);
   }
 }
