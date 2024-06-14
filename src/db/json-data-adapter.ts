@@ -36,7 +36,8 @@ export class JsonDataProviderAdapter implements DataProviderAdapter {
   public async create(data: CreateFoodtruckDto) {
     const currentData = this.read();
     const newData = data as Foodtruck;
-    currentData.push(newData);
+    const id = uuidv4();
+    currentData.push({ id, ...newData });
     this.write(currentData);
     return newData;
   }
