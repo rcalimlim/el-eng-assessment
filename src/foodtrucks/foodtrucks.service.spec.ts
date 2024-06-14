@@ -5,6 +5,8 @@ describe('FoodtrucksService', () => {
   let service: FoodtrucksService;
 
   beforeEach(async () => {
+    // another adv of using the nestjs framework is straightforward
+    // test harnesses
     const module: TestingModule = await Test.createTestingModule({
       providers: [FoodtrucksService],
     }).compile();

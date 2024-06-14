@@ -9,6 +9,10 @@ import { CreateFoodtruckDto } from 'src/foodtrucks/dto/create-foodtruck.dto';
 
 const JSON_FILE_PATH = path.join(__dirname, 'fixtures.json');
 
+enum JsonDataProviderAdapterErrors {
+  NOT_FOUND = 'No foodtruck could be found with that id',
+}
+
 @Injectable()
 export class JsonDataProviderAdapter implements DataProviderAdapter {
   private read(): Foodtruck[] {
@@ -25,28 +29,24 @@ export class JsonDataProviderAdapter implements DataProviderAdapter {
     fs.writeFileSync(JSON_FILE_PATH, JSON.stringify(data, null, 2));
   }
 
-  public async getAll() {
-    const trucks = this.read();
-    function transformKeys(obj: { [key: string]: any }): {
-      [key: string]: any;
-    } {
-      const result: { [key: string]: any } = {};
-
-      for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          const newKey = keyMapping[key] || key;
-          result[newKey] = obj[key];
-        }
-      }
-
-      return result;
-    }
-    const mapped = trucks.map(transformKeys);
-    return mapped;
+  public async getAll(): Promise<Foodtruck[]> {
+    // I didn't get a chance to dive into pagination in NestJS, but
+    // I would add it if I had more time
+    return this.read();
   }
 
-  public async getById(id: string) {
-    return this.read().find((item) => item.id === id);
+  public async getById(id: string): Promise<Foodtruck> {
+    // This is not scalable and is not the approach I would use to retrieve
+    // a foodtruck from a real database. Fortunately NestJS is an IoC framework,
+    // so I'll be able to swap this class out for a db connection class
+    // with the same interface without rewriting any foodtruck service code
+    const item = (await this.getAll()).find(
+      (truck: Foodtruck) => truck.id === id,
+    );
+    if (item === undefined) {
+      throw new Error(JsonDataProviderAdapterErrors.NOT_FOUND);
+    }
+    return item;
   }
 
   public async create(data: CreateFoodtruckDto): Promise<Foodtruck> {
@@ -59,12 +59,15 @@ export class JsonDataProviderAdapter implements DataProviderAdapter {
   }
 
   public async update(id: string, data: UpdateFoodtruckDto) {
-    const currentData = this.read();
-    const index = currentData.findIndex((item: any) => item.id === id);
-    if (index === -1) throw new Error('Item not found');
-    currentData[index] = { id, ...data } as Foodtruck;
-    this.write(currentData);
-    return currentData[index];
+    const trucks = await this.getAll();
+    const idx = trucks.findIndex((truck) => truck.id === id);
+    if (idx === -1) {
+      throw new Error(JsonDataProviderAdapterErrors.NOT_FOUND);
+    }
+    const truck = trucks[idx];
+    trucks[idx] = { id, ...truck, ...data };
+    this.write(trucks);
+    return trucks[idx];
   }
 
   public async delete(id: string) {
